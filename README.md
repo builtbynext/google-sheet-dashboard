@@ -47,3 +47,38 @@ vercel --prod # production deploy
 
 Every push to the connected branch will auto-deploy once the project
 is linked on Vercel.
+
+## Password-protecting it (HTTP Basic Auth)
+
+`middleware.js` gates every request behind an HTTP Basic Auth prompt
+using Vercel's Routing Middleware (what used to be called "Edge
+Middleware" — same idea, Vercel renamed the feature). It runs before
+the static file is served, so visitors see the browser's built-in
+username/password dialog before they ever see the dashboard.
+
+Set the credentials as environment variables in the Vercel project
+(do **not** hardcode them in the repo):
+
+1. In the Vercel dashboard: **Project → Settings → Environment
+   Variables**.
+2. Add:
+   - `BASIC_AUTH_USER`
+   - `BASIC_AUTH_PASS`
+3. Apply them to whichever environments need the gate (Production,
+   Preview, etc.) and redeploy — env var changes only take effect on
+   the next deployment.
+
+Locally with the Vercel CLI, you can set them with:
+
+```bash
+vercel env add BASIC_AUTH_USER
+vercel env add BASIC_AUTH_PASS
+```
+
+If either variable is unset, the middleware fails closed (returns
+401) rather than leaving the dashboard open.
+
+Note: plain HTTP Basic Auth sends credentials base64-encoded, not
+encrypted, on every request — fine over HTTPS (which Vercel enforces
+by default) for keeping casual visitors out, but it's not meant to
+protect genuinely sensitive data from a determined attacker.
